@@ -20,10 +20,6 @@ impl CompactSize {
 
     pub fn to_bytes(&self) -> Vec<u8> {
         // TODO: Encode according to Bitcoin's CompactSize format:
-        // [0x00–0xFC] => 1 byte
-        // [0xFDxxxx] => 0xFD + u16 (2 bytes)
-        // [0xFExxxxxxxx] => 0xFE + u32 (4 bytes)
-        // [0xFFxxxxxxxxxxxxxxxx] => 0xFF + u64 (8 bytes)
         match self.value {
             0..=0xFC => vec![self.value as u8],
             0xFD..=0xFFFF => {
