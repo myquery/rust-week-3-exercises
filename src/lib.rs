@@ -38,7 +38,6 @@ impl CompactSize {
                 bytes
             }
         }
-
     }
 
     pub fn from_bytes(bytes: &[u8]) -> Result<(Self, usize), BitcoinError> {
@@ -69,12 +68,12 @@ impl CompactSize {
                 if bytes.len() < 9 {
                     return Err(BitcoinError::InsufficientBytes);
                 }
-                let value = u64::from_le_bytes([bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7], bytes[8]]);
+                let value = u64::from_le_bytes([
+                    bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7], bytes[8],
+                ]);
                 Ok((CompactSize::new(value), 9))
             }
-
         }
-
     }
 }
 
@@ -88,7 +87,6 @@ impl Serialize for Txid {
     {
         // TODO: Serialize as a hex-encoded string (32 bytes => 64 hex characters)
         serializer.serialize_str(&hex::encode(self.0))
-
     }
 }
 
@@ -144,7 +142,13 @@ impl OutPoint {
         let mut txid_bytes = [0u8; 32];
         txid_bytes.copy_from_slice(&bytes[0..32]);
         let vout = u32::from_le_bytes([bytes[32], bytes[33], bytes[34], bytes[35]]);
-        Ok((OutPoint { txid: Txid(txid_bytes), vout }, 36))
+        Ok((
+            OutPoint {
+                txid: Txid(txid_bytes),
+                vout,
+            },
+            36,
+        ))
     }
 }
 
@@ -177,7 +181,12 @@ impl Script {
             return Err(BitcoinError::InsufficientBytes);
         }
         let script_bytes = &bytes[prefix_size..total_size];
-        Ok((Self { bytes: script_bytes.to_vec() }, total_size))
+        Ok((
+            Self {
+                bytes: script_bytes.to_vec(),
+            },
+            total_size,
+        ))
     }
 }
 
@@ -186,7 +195,6 @@ impl Deref for Script {
     fn deref(&self) -> &Self::Target {
         // TODO: Allow &Script to be used as &[u8]
         &self.bytes
-
     }
 }
 
@@ -233,7 +241,14 @@ impl TransactionInput {
             bytes[sequence_start + 2],
             bytes[sequence_start + 3],
         ]);
-        Ok((Self { previous_output, script_sig, sequence }, sequence_start + 4))
+        Ok((
+            Self {
+                previous_output,
+                script_sig,
+                sequence,
+            },
+            sequence_start + 4,
+        ))
     }
 }
 
@@ -287,8 +302,20 @@ impl BitcoinTransaction {
             inputs.push(input);
             offset += input_size;
         }
-        let lock_time = u32::from_le_bytes([bytes[offset], bytes[offset + 1], bytes[offset + 2], bytes[offset + 3]]);
-        Ok((Self { version, inputs, lock_time }, offset + 4))   
+        let lock_time = u32::from_le_bytes([
+            bytes[offset],
+            bytes[offset + 1],
+            bytes[offset + 2],
+            bytes[offset + 3],
+        ]);
+        Ok((
+            Self {
+                version,
+                inputs,
+                lock_time,
+            },
+            offset + 4,
+        ))
     }
 }
 
@@ -297,7 +324,11 @@ impl fmt::Display for BitcoinTransaction {
         writeln!(f, "Version: {}", self.version)?;
         for (i, input) in self.inputs.iter().enumerate() {
             writeln!(f, "Input {}:", i)?;
-            writeln!(f, "  Previous Output Txid: {}", hex::encode(input.previous_output.txid.0))?;
+            writeln!(
+                f,
+                "  Previous Output Txid: {}",
+                hex::encode(input.previous_output.txid.0)
+            )?;
             writeln!(f, "  Previous Output Vout: {}", input.previous_output.vout)?;
             writeln!(f, "  ScriptSig: {}", hex::encode(&input.script_sig.bytes))?;
             writeln!(f, "  Sequence: {}", input.sequence)?;
